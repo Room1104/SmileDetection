@@ -15,25 +15,27 @@ class smile_detector:
     self.image_pub = rospy.Publisher("smile_detector",Int8)
     rospy.init_node('smile_detector', anonymous=True)
     self.bridge = CvBridge()
-    self.image_sub = rospy.Subscriber("/usb_cam/image_raw",Image,self.callback)
+    'self.image_sub = rospy.Subscriber("/usb_cam/image_raw",Image,self.callback)'
+    self.image_sub = rospy.Subscriber("/head_xtion/rgb/image_color",Image,self.callback)
     self.face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
     self.smile_cascade = cv2.CascadeClassifier("haarcascade_smile.xml")
   def callback(self,data):
     try:
       cv_image = cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
       gray = cv2.cvtColor(cv_image,cv2.COLOR_BGR2GRAY) 
+      'gray = cv2.pyrDown(gray)'
       gray = cv2.pyrDown(gray)
-      gray = cv2.pyrDown(gray)
-      faces = self.face_cascade.detectMultiScale(gray,1.1,5)
+      scale=2
+      faces = self.face_cascade.detectMultiScale(gray,1.3,5)
       image=cv_image
       NumberOfSmiles=0
       for (x,y,w,h) in faces:
-            cv2.rectangle(image,(x*4,y*4),(x*4+w*4,y*4+h*4),(255,0,0),2)
+            cv2.rectangle(image,(x*scale,y*scale),(x*scale+w*scale,y*scale+h*scale),(255,0,0),2)
             roi=gray[y:y+h, x:x+w]
-            roic=image[y*4:y*4+h*4,x*4:x*4+w*4]
-            smile = self.smile_cascade.detectMultiScale(roi,1.1,5)
+            roic=image[y*scale:y*scale+h*scale,x*scale:x*scale+w*scale]
+            smile = self.smile_cascade.detectMultiScale(roi,1.3,5)
             for (x1,y1,w1,h1) in smile:
-                cv2.rectangle(roic,(x1*4,y1*4),(x1*4+w1*4,y1*4+h1*4),(0,0,255),2)
+                cv2.rectangle(roic,(x1*scale,y1*scale),(x1*scale+w1*scale,y1*scale+h1*scale),(0,0,255),2)
             if len(smile)>0:
                NumberOfSmiles=NumberOfSmiles+1
       'cv2.imshow("view",image)'
